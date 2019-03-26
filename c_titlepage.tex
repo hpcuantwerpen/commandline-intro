@@ -1,0 +1,50 @@
+\def\trapezebg#1% trailing comments needed to avoid inserting empty lines/spaces before the graphic?
+              {\setupMPvariables[Trapeze][#1]%
+                \startuseMPgraphic{Trapeze}
+                  StartPage;
+                  fill Page withcolor \MPcolor{vscbackground};
+                  % Slope of trapeze should be 12 degrees -> tan(12)=0.213
+                  filldraw((0cm,0cm)
+                    -- (PaperWidth,0cm)
+                    -- (PaperWidth,\MPvar{height}+0.213*PaperWidth)
+                    -- (0cm,\MPvar{height}) -- cycle)
+                    withcolor \MPcolor{vscorange};
+                  StopPage;
+                \stopuseMPgraphic
+                \useMPgraphic{Trapeze}}
+
+\definelayer[titlebackground][corner={left,bottom},location={right,top},width=\paperwidth,height=\paperheight]
+\setlayer[titlebackground][hoffset=0.0cm,voffset=0.0cm]{\trapezebg{height=13cm}}
+
+\definelayer[lionlogo][x=\paperwidth,y=3.5cm,location={left,bottom}]
+\setlayer[lionlogo]{\externalfigure[Vlaanderen_is_supercomputing.pdf][height=30mm]}
+
+\definefont [TitleFont][SansBold at 50pt]
+\definefont [SubtitleFont][Sans at 25pt]
+\definefont [LogoFont][Sans at 17pt]
+\definefont [LogoFontMedium][SansMedium at 17pt]
+
+\definelayer[typologo][x=0cm,y=\paperheight,location={right,top}]
+\setlayerframed[typologo][hoffset=1cm,voffset=-1cm,align=normal,strut=no,frame=off,foregroundcolor=vscbackground]{%
+  \switchtointerlinespace[line=15.3pt]\LogoFont VLAAMS\\{\LogoFontMedium SUPERCOMPUTER\\CENTRUM}}
+
+\definelayer[vscurl][x=\paperwidth,y=\paperheight,location={left,top}]
+\setlayer[vscurl][hoffset=-1cm,voffset=-1cm] {%
+  \LogoFont \vscbackground vscentrum.be
+}
+
+% Title page
+\setupbackgrounds[page][background={titlebackground,lionlogo,typologo,vscurl}]
+\startstandardmakeup
+  \vfill
+    {\TitleFont\vscbackground Command line tools}\\
+    {\SubtitleFont\vscbackground A short introduction to the UNIX shell}\\
+    \blank[2*line]
+    {\LogoFont\vscbackground Thomas Danckaert}\\
+    \blank[3cm]
+\stopstandardmakeup
+
+%%% Local Variables:
+%%% mode: context
+%%% TeX-master: "command_line_intro"
+%%% End:

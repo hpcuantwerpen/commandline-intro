@@ -1,0 +1,64 @@
+\startenvironment env_vscfonts
+
+\definefontalternative[ld] % light
+\definefontalternative[li] % lightitalic
+\definefontalternative[md] % medium
+\definefontalternative[mi] % mediumitalic
+
+% font names should appear if you run the following command:
+% mtxrun --script fonts --list --all --pattern=flandersart*
+\starttypescript [serif] [flandersart]
+  \definefontsynonym[SerifLight] [name:flandersartseriflight] [features=default]
+  \definefontsynonym[Serif] [name:flandersartserifregular] [features=default]
+  \definefontsynonym[SerifMedium] [name:flandersartserifmedium] [features=default]
+  \definefontsynonym[SerifBold] [name:flandersartserifbold] [features=default]
+
+  \definebodyfont [default] [rm]
+                  [ld=SerifLight sa 1,
+                    tf=Serif sa 1,
+                    it=SansItalic sa 1, % fall back to Sans version for italics
+                    md=SerifMedium sa 1,
+                    bf=SerifBold sa 1]
+\stoptypescript
+
+\starttypescript [sans] [flandersart]
+  \definefontsynonym[SansLight] [name:flandersartsanslight] [features=default]
+  \definefontsynonym[SansLightItalic] [name:flandersartsanslightitalic] [features=default]
+  \definefontsynonym[Sans] [name:flandersartsansregular] [features=default]
+  \definefontsynonym[SansItalic] [name:flandersartsansitalic] [features=default]
+  \definefontsynonym[SansMedium] [name:flandersartsansmedium] [features=default]
+  \definefontsynonym[SansMediumItalic] [name:flandersartsansmediumitalic] [features=default]
+  \definefontsynonym[SansBold] [name:flandersartsansbold] [features=default]
+  \definefontsynonym[SansBoldItalic] [name:flandersartsansbolditalic] [features=default]
+
+  \definebodyfont [default] [ss]
+                  [ld=SansLight sa 1,
+                    li=SansLightItalic sa 1,
+                    tf=Sans sa 1,
+                    it=SansItalic sa 1,
+                    md=SansMedium sa 1,
+                    mi=SansMediumItalic sa 1,
+                    bf=SansBold sa 1,
+                    bi=SansBoldItalic sa 1]
+\stoptypescript
+
+\starttypescript [mono] [inconsolata]
+  \definefontsynonym[Mono] [name:inconsolataregular]
+  \definefontsynonym[MonoBold] [name:inconsolatabold]
+\stoptypescript
+
+\starttypescript[vsc]
+  \definetypeface [vsc] [rm] [serif] [flandersart] [default]
+  \definetypeface [vsc] [ss] [sans] [flandersart] [default]
+  \definetypeface [vsc] [tt] [mono] [inconsolata] [default]
+  \definetypeface [vsc] [mm] [math] [palatino] [default]
+\stoptypescript
+
+\setupbodyfont[vsc,rm,12pt]
+\setupbodyfontenvironment[default][em=md] % flanders art serif doesn't have italics
+
+\stopenvironment
+%%% Local Variables:
+%%% mode: context
+%%% TeX-master: "command_line_intro"
+%%% End:

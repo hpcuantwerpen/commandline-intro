@@ -1,0 +1,78 @@
+\definecolor[vscbackground][h=F1F0ED]
+\definecolor[vscorange][h=DB7340]
+
+\setupwhitespace[medium]
+
+\setuppagenumbering[alternative=doublesided,location=]
+
+% Fancy page numbering:
+\definelayer[numberleft][repeat=yes,x=0cm,y=\paperheight,location={right,top}]
+% Use state=continue to avoid printing a page number on the title page.
+\definelayer[numberright][state=continue,x=\paperwidth,y=\paperheight,location={left,top}]
+
+\startsetups leftlayer
+\setlayerframed[numberleft][voffset=-2cm,frame=off,background=color,backgroundcolor=vscorange,foregroundcolor=vscbackground]{
+ \ \ {\md \pagenumber}\ 
+}
+\stopsetups
+
+\startsetups rightlayer
+\setlayerframed[numberright][voffset=-2cm,frame=off,background=color,backgroundcolor=vscorange,foregroundcolor=vscbackground]{
+  \ {\md \pagenumber}\ \ 
+}
+\stopsetups
+
+\setupbackgrounds[leftpage][setups=leftlayer,background=numberleft]
+\setupbackgrounds[rightpage][setups=rightlayer,background=numberright]
+
+% For URLs
+\setupinteraction[state=start]
+\setupcolors[state=start]
+\setupurl[color=blue]
+\setupinteraction[state=start, color=blue]
+
+% Chapter & section titles:
+\setuphead[chapter][style=\ss\tfd\bf]
+\setuphead[section][style=\ss\tfb]
+
+\setupframedtexts[offset=none]
+\definetyping[SHELL]
+\setuptyping[SHELL][escape={[[,]]},
+  margin=no,
+  before={\startframedtext[width=\textwidth,
+      height=fit,
+      background=color,
+      backgroundcolor=vscbackground,
+      align=flushleft,
+      loffset=1cm]},
+  after={\stopframedtext}]
+
+\definedescription[Optiondesc][headstyle=\tt\bf,
+  style=normal,
+  align=normal,
+  alternative=hanging,
+  width=broad,
+  margin=1cm]
+
+\definedescription[Descr][headstyle=bold,
+  style=normal,
+  align=normal,
+  alternative=hanging,
+  width=broad,
+  margin=1cm]
+
+\define[1]\Prompt{\blank
+  \framed[height=fit,
+    background=color,
+    backgroundcolor=vscbackground,
+    align=flushleft,
+    loffset=1cm,
+    width=\textwidth]{{\tt\bf \$\ }{\tt #1}}}
+
+\define[1]\Command{{\tt #1}}
+\define[1]\Arg{{\bf\tt #1}}
+
+%%% Local Variables:
+%%% mode: context
+%%% TeX-master: "command_line_intro"
+%%% End:

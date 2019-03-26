@@ -1,0 +1,882 @@
+\enableregime[utf]
+
+\environment env_vscfonts
+\environment env_vscstyle
+
+\useURL
+  [coreutilsdocs]
+  [https://www.gnu.org/software/coreutils/manual/html_node/index.html]
+\useURL
+  [bashmanual]
+  [https://www.gnu.org/software/bash/manual/html_node/index.html]
+\useURL
+  [sedmanual]
+  [https://www.gnu.org/software/sed/manual/html_node/index.html]
+
+\starttext
+
+\component c_titlepage
+
+\placecombinedlist[content]
+
+\chapter{Introduction}
+This is a short reference, written for the course
+\quotation{Introduction to Linux} for new users of the UAntwerpen HPC
+clusters.  The purpose of this document is to explain some of the most
+commonly used shell commands with their basic options in an accessible
+way, so new users can quickly gain some practical experience.
+
+These instructions should provide you with all the information you
+need in order to solve the exercises, but only serve as an
+introduction to the many options and features of these commands.  To
+see all available options for a command, you can read the man page:
+\Prompt{man [COMMAND]}
+
+Man pages are often written in a very succinct style.  For more
+elaborate explanations and detailed discussion of every feature of a
+command, the manuals provided by the GNU project are very useful.
+
+\startitemize
+  \item Most commands discussed here are part of
+a package called \quote{coreutils}, for which you can find the manual
+at
+
+\from[coreutilsdocs].
+
+\item For information on Bash and built-in shell commands
+  specifically, we refer to the Bash manual at
+
+  \from[bashmanual].
+
+\item \Command{sed} is an extremely versatile tool with a separate
+  manual of its own:
+
+  \from[sedmanual].
+\stopitemize
+
+On systems where these manuals are installed, you can read them from
+the terminal as well.  To read the manual section on a command, typing
+\Prompt{info [COMMAND]} usually takes you straight to the manual
+section about that command.  For instructions on how to use the
+\Command{info} viewer itself, you can run
+\Prompt{info info "Getting Started" Help}
+
+Note: there are many different shells (i.e.\ \Command{bash},
+\Command{sh}, \Command{ksh}, \textellipsis), and many different
+implementations of these command line tools (GNU, BSD, commercial
+implementations, \textellipsis).  This document assumes we are using the
+Bash shell and the GNU command line tools, which are the default on
+the VSC systems and probably most HPC clusters worldwide.
+Nevertheless, a lot of the material applies to all versions and
+implementations.
+
+\chapter{The file system}
+\subsubject{\Command{ls} --- List directory contents}
+\Prompt{ls [OPTION]... [FILE]...}
+
+The \index[LS]{\Command{ls}}\Command{ls} command \index{directory+list
+ contents of}lists files and directories on the file system.  If if
+no \Arg{FILE} arguments are given, it lists the contents of the
+current directory.  With \Arg{FILE} arguments, \Command{ls} will list
+each file or --- if \Arg{FILE} is the name of a directory --- its contents.
+
+Many options are available to make \Command{ls} display additional
+information about files, or change the output order and formatting.
+Some of the most commonly used options are
+
+\Optiondesc{-a, --all} Do not ignore entries starting with \quote{\tt{.}}.
+
+\Optiondesc{-d, --directory} List directories themselves, not their contents.
+
+\Optiondesc{-l} Use a long listing format.  This displays additional
+information such as file size, modification date and time, ownership
+and permissions.
+
+\Optiondesc{-h, --human-readable} If used together with \Arg{-l},
+print file sizes in human readable format.
+
+\Optiondesc{--sort} \index{sorting+\Command{ls}: sort output}By
+default, \Command{ls} displays entries in alphabetical order.  You can
+use the options \Arg{--sort=time} or \Arg{--sort=size} --- or the
+respective short options \Arg{-t} and \Arg{-S} --- to sort by
+modification time or file size.  Other sorting options are
+\Arg{extension} (\Arg{-X}), \Arg{version} (\Arg{-v}), or \Arg{none}
+(\Arg{-U})\footnote{With sorting order \Arg{none}, files are displayed
+  in the order in which they are stored in the directory (often, this
+  is the order in which they were created, but this depends on the
+  details of the file system).}.
+
+\Optiondesc{-r, --reverse} \index[REVERSE]{\Command{ls}: reverse
+  order}Reverse the order while sorting.
+
+\subsubject{\Command{locate} --- Look up files by name}
+\index{searching+\Command{locate} --- look up files by name}
+\Prompt{locate [OPTION]... PATTERN ...}  \Command{locate} takes one or
+more patterns and looks for matching files in a periodically updated
+database of file names.  The \Arg{PATTERN} arguments can be simple
+text strings (which match any filename that contains them), shell
+wildcard patterns, or --- when combined with the \Arg{--regex} option
+--- regular expressions.
+
+If you are looking for a certain file, \Command{locate} is a fast and
+simple tool, with the following restrictions:
+\startitemize
+\item \Command{locate} can only find files which existed when the
+  database of filenames was last updated.
+\item Not all files are included in the database.  For example,
+  personal directories of users are not indexed on the UAntwerpen HPC
+  systems.
+\stopitemize
+
+Example:
+\Prompt{locate */hosts}
+
+\subsubject{\Command{find} --- Search for files in a directory hierarchy}
+\index{searching+\Command{find} --- search for files} Like
+\Command{locate}, \Command{find} can search for files, but it offers
+many more options and works according to a different principle:
+\startitemize
+\item \Command{find} does not rely on databases of file names, but
+  actively searches the file system while it is running instead.  Therefore,
+  \Command{find} can see any file that exists at the time it is called
+  (if you have reading permission for the directory where it is
+  located).
+\item Because \Command{find} searches the file system instead of a
+  fixed database, it can be much slower than \Command{locate}.
+\item \Command{find} can use arbitrary combinations of many different
+  search criteria besides the file name, including but not limited to
+  file ownership, permissions, creation, access or modification times.
+\item Using \quotation{actions} such as \Arg{-exec} or \Arg{-ok}, you
+  can immediately run arbitrary commands on the matched files.
+\stopitemize
+Because of its many features, \Command{find} is a powerful, but
+complex, command.  It is called according to the following convention:
+\Prompt{find [PATH...] [EXPRESSION]}
+
+\Command{find} recursively searches for files that match the search
+criteria in \Arg{EXPRESSION}, starting from every location in the list
+of \Arg{PATH} arguments.  The list of search \Arg{PATH}s must appear
+first, the \Arg{EXPRESSION} must appear last.  Arguments are optional:
+without \Arg{PATH}, \Command{find} searches from the current working
+directory; without \Arg{EXPRESSION}, \Command{find} matches every file
+it encounters, and prints the file name.
+
+Search criteria and actions are given in \Arg{EXPRESSION}.  Many
+properties of a file can be used as search criteria, but we only list
+a few of the most common {\em tests}.  The manual for \Command{find}
+has a complete list.
+
+\Optiondesc{-name PATTERN} Test if the file name matches
+\Arg{PATTERN}, a shell wildcard expression.  Example: \Arg{-name
+  '*.txt'} matches files ending in \Arg{.txt}.
+
+\Optiondesc{-type [dfl...]} Test if the file is a \Arg{d}irectory,
+regular \Arg{f}ile or symbolic \Arg{l}ink.  Refer to the manual for
+more exotic file types.
+
+\Optiondesc{-size n[bcwkMG]} Test the size of the file, in units of
+\Arg{b}locks, bytes (\Arg{c}), \Arg{w}ords, \Arg{k}ilobytes,
+\Arg{M}egabytes or \Arg{G}igabytes.  To find files bigger than or
+smaller than a given size, use a prefix of \Arg{+} or \Arg{-}
+respectively. Example: \Arg{-size +1M} matches files larger than 1
+Megabyte.
+
+\Optiondesc{-readable, -writable, -executable} Test if you can read,
+write or execute the file.
+
+If an expression contains multiple tests in a row, files must satisfy
+all of them to be considered a match.  Alternatively, you can combine
+tests with \Arg{-or}, or negate the result of a test with \Arg{'!'} or
+\Arg{-not}.  For complex combinations of tests, you may need to use
+parentheses \Arg{'('} \Arg{')'} to enforce the correct precedence.
+
+\Arg{EXPRESSION} can also contain {\em actions} to be performed on
+matching files.  If no action is given, \Command{find} prints the name
+of each matching file.
+
+\Optiondesc{-exec COMMAND \{\} ';'} Run an arbitrary \Arg{COMMAND} on
+the matching files.  The name of each matching file is inserted in
+place of the \Arg{\{\}} braces.  \quote{\Arg{;}} indicates the end of the
+command (you should quote or escape it, because the shell will
+interpret an unquoted \Arg{;} as the end of your \Command{find}
+command, instead of passing it on to \Command{find}).
+
+\Optiondesc{-ok COMMAND \{\} ';'} Identical to \Arg{-exec}, but asks
+for confirmation before executing a \Arg{COMMAND}.
+
+Example: find all files in the present directory and its subdirectories:
+
+\Prompt{find}
+
+Example: find all pictures (with extension {\tt .jpg}) under the
+present directory:
+
+\Prompt{find . -name '*.jpg'}
+
+Note the \Arg{''} quotes surrounding the pattern {\tt
+  *.jpg}\footnote{Without quotes, the shell could expand {\tt *.jpg}
+  into a list of file names instead of passing it on as an argument to
+  \Command{find}.}.  The \quote{\tt .} is optional here, as
+\Command{find} searches the present directory by default if no
+\Arg{PATH} arguments are given.
+
+We can add an action to the command to move the matching files to
+another location: \Prompt{find . -name '*.jpg' -exec mv {}
+  \$HOME/Pictures/ ';'} %$
+
+We can use \Arg{-or} and parentheses to include files with extension
+{\tt .png} as well:
+
+\Prompt{find . '(' -name '*.jpg' -or -name '*.png' ')' \backslash \\
+    -exec mv \{\} \$HOME/Pictures/ ';'}
+
+\index{archive}\index{compression}
+\subsubject{\Command{tar} --- Create or unpack tar archives}
+\Prompt{tar [OPTION]... [FILE]...}
+\index[TAR]{\Command{tar}} \Command{tar} --- originally an
+abbreviation for \quotation{tape archive} --- can create and extract
+{\tt .tar} archive files.  \Command{tar} files can contain arbitrary
+sets of files and directories, including their ownership and
+permission data.  Plain \Command{tar} files do not compress the data,
+therefore \Command{tar} is usually combined with \Command{gzip},
+\Command{xzip} or \Command{bzip} to compress the archive file.
+
+First, choose one of the following options to tell \Command{tar} to
+\Arg{c}reate, e\Arg{x}tract or list the contents of an archive, and
+which file to work with:
+
+\Optiondesc{-c} Create an archive file.
+
+\Optiondesc{-x} Extract the contents of an archive file.
+
+\Optiondesc{-t} List the contents of the archive.
+
+\Optiondesc{-f FILE} Provides the name of the archive file you want to
+create, extract or list.  When you create a new archive, and a file
+with the same name already exists, it is replaced.  If no \Arg{-f}
+argument is given, GNU \Command{tar} reads archive files from
+standard input, or writes files to standard output.
+
+\Optiondesc{-v} Enable verbose output.  If you use \Arg{-v} together
+with options \Arg{-c} or \Arg{-x}, \Command{tar} prints the name of
+every file it archives or extracts.  If you combine \Arg{-v} with
+option \Arg{-t}, \Command{tar} prints a verbose listing of the archive
+contents, showing ownership and permissions, size and modification
+date.
+
+To use compressed archive files, provide one of the following options:
+
+\Optiondesc{-z} \Command{gzip}
+
+\Optiondesc{-J} \Command{xzip}
+
+\Optiondesc{-j} \Command{bzip}
+
+Apart from a number of options, \Command{tar} accepts a list of
+\Arg{FILE} arguments, which can be files or directories.  When you
+create an archive (\Arg{-c}), this is the list of files and/or
+directories that should be included.  When you extract or list the
+contents of an archive, the \Arg{FILE} arguments are optional:  if a list is given,
+only those files or directories will be extracted or listed; if no
+list is given, \Command{tar} extracts or lists all of the archive's
+contents.
+
+\subsubsubject{Examples}
+
+Extract the contents of a file:
+
+\Prompt{tar -xf archive.tar.gz}
+
+Archive all {\tt txt} files in the current directory, with
+\Command{gzip} compression:
+
+\Prompt{tar -czf textfiles.tar.gz *.txt}
+
+List the contents of the previously created file:
+
+\Prompt{tar -tf textfiles.tar.gz}
+
+Archive the contents of a directory, with \Command{xzip} compression:
+
+\Prompt{tar -cJf my_directory.tar.zs ./my_directory}
+
+\subsubject{\Command{zip} --- Create and modify zip archives}
+
+\Prompt{zip [OPTION]... [ZIPFILE] [FILES]...}
+\index{zip files+\Command{zip}: compress files} The \Command{zip} commands
+creates archive files in the familiar .zip format.  At the command
+line, specify options first, followed by the name of the .zip archive
+you want to create or modify, and the list of \Command{FILE}s you want
+to include in the archive.  If the provided .zip archive already
+exists, \Command{zip} will add the \Command{FILE}s to the existing
+archive, or update them if the archive already contains files with the
+same name.
+
+\Optiondesc{-r, --recurse-paths} The list of \Command{FILE}s to be
+added to the archive can contain directory names as well.  By default,
+the resulting .zip archive will only contain the (empty) directory.
+Use the option \Arg{-r}, to add the contents of these directories
+--- and their subdirectories --- as well.
+
+\Optiondesc{-0, -1, -2, ..., -9} A number from \Arg{-0} to
+\Arg{-9} sets the compression level.  The default level is
+\Arg{-6}.  Higher levels will result in smaller archive files, but
+might take more time to compress or extract.
+
+We refer to the command's man page for many more advanced options to
+add files to an archive, update or remove existing files, or select
+files using on pattern matching.
+
+\subsubsubject{Examples}
+
+Compress all {\tt txt} files in the current directory:
+
+\Prompt{zip txtfiles.zip *.txt}
+
+Compress a directory with all contents:
+
+\Prompt{zip -r my_directory.zip ./my_directory}
+
+\subsubject{\Command{unzip} --- Extract files from zip archives}
+
+\Prompt{unzip [OPTION]... [ZIPFILE] [FILES]...}
+
+\index{zip files+\Command{unzip}: extract files} Use \Command{unzip}
+to extract contents from .zip archives.  To extract all contents of
+the archive \Command{myfile.zip} into the current working directory,
+simply call \Command{unzip} with a single argument:
+
+\Prompt{unzip myfile.zip}
+
+Optionally, you can provide a list of \Command{FILE}s to extract only those
+files from the archive.
+
+To inspect the contents of an archive {\em without extracting} them, you can
+use the options \Command{-l} or \Command{-v}.
+
+\Optiondesc{-l} List archive contents (short format): print names,
+uncompressed file sizes and modification dates.
+
+\Optiondesc{-v} List archive contents (verbose format): print
+additional information about the files contained in the archive, such
+as their compressed file size and the compression method used.
+
+\chapter{Processes}
+\subsubject{\Command{ps} --- List processes}
+\Prompt{ps [OPTIONS]}\index[PS]{\Command{ps} --- List
+  processes}\Command{ps} provides information on processes currently
+running on the system.  Without any options, only processes running in
+your current shell session are listed.  For each process, \Command{ps}
+prints the process id ({\tt PID}), name of the {\tt COMMAND} and used
+processor {\tt TIME}, as well as the {\tt TTY} interface\footnote{{\tt
+    tty} originally stands for TeleTYpewriter, and is the Linux system
+  interface for keyboard terminal sessions.} it is connected to.
+
+Using various options, you can control which information is shown, and
+which processes are listed.  Note that, for historical reasons,
+\Command{ps} accepts options with and without leading \quote{\Arg{-}}.
+
+\Optiondesc{x} Also show processes not connected to a terminal. 
+
+\Optiondesc{a} Also show processes from other users.  If combined with
+\Arg{x}, \Command{ps ax} shows all processes by all users.
+
+\Optiondesc{u} displays processes in \quotation{user-oriented} format:
+displays some additional information, such as user name, processor and
+memory usage, and the full command line that started the process.
+
+\Optiondesc{o format} display information according to a chosen
+\Arg{format}, a list of names of fields such as \Arg{pid}, \Arg{user},
+\Arg{command}, \textellipsis\ See the \Command{man} page for
+\Command{ps} for a full description of all formatting fields and
+options.
+
+\Optiondesc{k keys} \index{sorting+\Command{ps}: sort output}sort
+output according to the given list of \Arg{keys}.  \Arg{keys} is a
+comma-separated list of fields, and the output is hierarchically
+sorted according to the chosen keys.  For example, the command
+\Command{ps au --sort user,pid} sorts processes by user id, and then
+sorts processes for each user by their process id.  Add \quote{\tt -}
+in front of the field name to sort in reverse order.  Again, we refer
+to the \Command{man} page for a full list of sorting options.
+
+\Optiondesc{U userlist} Given the option \Arg{U} and an argument
+\Arg{userlist}, a comma-separated list of one or more user names,
+\Command{ps} only displays processors that belong to one of those
+users
+
+\Optiondesc{-T} Display a separate line of information for each of a
+process' threads.
+
+\subsubsubject{Examples}
+
+List all processes, in user-oriented format:
+\Prompt{ps aux}
+
+List all processes, sorted by ascending CPU usage:
+\Prompt{ps aux k\%cpu}
+
+\subsubject{\Command{top} and \Command{htop} --- List processes interactively}
+\index[TOP]{\Command{top} --- List processes interactively}
+\index[HTOP]{\Command{htop} --- List processes interactively}
+\Command{top} --- and its younger cousin \Command{htop}
+--- can be regarded as an interactive, \quotation{live} version of
+\Command{ps}.
+\Prompt{top [OPTIONS]}
+
+Usually, you run \Command{top} without any options to see a
+continuously updated list of processes, and some system usage
+statistics.  By default, processes are listed in order of decreasing
+processor usage (\quote{{\tt CPU}}).  Not all processes will fit in the terminal,
+but you can use the arrow keys to scroll up or down.  \Command{top}
+can also show the threads of each process if you switch to thread view
+by pressing {\bold\tt H}.
+
+Some of the fields shown by default are:
+
+\Descr{\tt PID} The process id.
+
+\Descr{\tt USER} The user id.
+
+\Descr{\tt RES} Resident memory, a good measure for the amount of physical
+memory currently occupied by the process.
+
+\Descr{\tt SHR} Shared memory, the amount of resident memory that is
+shared with other processes.
+
+\Descr{\tt \%CPU} The percentage of available processor time currently
+used by the process, measured in percents of one processor core ---
+for multi-threaded processes, this can be more than 100\%.
+
+\Descr{\tt \%MEM} Memory usage: resident memory as a percentage of
+available memory.
+
+\Descr{\tt TIME} Total processor time used by the process so far.
+
+\Command{top} doesn't show all available information by default.  To
+show further data (or disable fields that don't interest you), press
+{\bold\tt f} (\quotation{Fields Management}).  This takes you to a
+menu with a list of all available fields, where you can select new
+fields using the arrow keys, and mark them for display with the
+{\bold\tt d} key.  A very useful field is {\bold\tt P}, the processor
+core a thread or process last ran on.  This allows you to verify
+whether multiple threads and processes are running on the same core,
+which can slow down parallel calculations, sometimes by a big factor.
+
+\Command{htop} is a more modern version of \Command{top} which
+presents similar information in a slightly more advanced interface.
+It displays usage bars for every processor core on the system, as well
+as the memory, which gives you a quick impression of the system's
+total load.  Hit function key {\tt\bold F1} or {\tt\bold h}, to get
+help; {\tt\bold F2} or {\tt\bold C} to configure which fields are
+displayed.
+
+\subsubject{\Command{jobs} --- Controlling jobs in the shell}
+\Prompt{jobs}
+\index[JOBS]{\Command{jobs} --- list active jobs in shell}Every active
+pipeline (consisting of one or more processes) in the current shell
+session is known as a \quote{job}.  If you move jobs to the
+background, either by terminating a pipeline with \Arg{\&}, or by
+interrupting them with {\tt\bold Ctrl + z}, multiple
+active jobs can exist at the same time.
+
+Jobs are numbered starting from {\tt 1}.  The \Command{jobs} command
+prints a list of all currently active jobs, with their job number,
+status (\quotation{Running} or \quotation{Stopped}) and the pipeline
+used to start them.
+
+Commands that act on jobs, such as \Command{kill}, \Command{fg} (run
+job in foreground\index[FG]{\Command{fg} --- run a job in the
+  foreground}) and \Command{bg} (run job in the
+background\index[BG]{\Command{bg} --- run a job in the background}),
+identify jobs by a \Arg{jobspec}\index[JOBSPEC]{{\tt jobspec}}
+argument.  This is the number of the job as reported by
+\Command{jobs}, preceded by {\tt\%}.  For example, the following
+command lets job {\tt 2} continue running in the background:
+
+\Prompt{bg \%2}
+
+\subsubject{\Command{kill} --- Terminate or pause processes}
+
+\Prompt{kill [-sigspec] pid \| jobspec ...}
+
+\index[KILL]{\Command{kill} --- terminate or pause processes}
+\Command{kill} can terminate or interrupt processes by sending them a
+signal.  You can terminate a single process by providing its
+\Arg{pid}, the process id which you can obtain from \Command{ps} or
+\Command{top}.  For example, the following command terminates process {\tt 54399}:
+
+\Prompt{kill 54399}
+
+You can also terminate a shell job instead of a simple process, by
+providing a \Arg{jobspec} instead of a \Arg{pid}.  If this job is a
+pipeline consisting of multiple processes, all those processes are
+terminated by the same \Command{kill} command.  For example, to
+terminate job {\tt 2}, use the following command:
+
+\Prompt{kill \%2}
+
+By default, \Command{kill} sends processes the \Arg{TERM} signal,
+asking them to clean up and exit.  However, there are other signals
+you can send, using the optional argument \Arg{-sigspec}.  There are a
+number of different signals, each of which has a different meaning.
+Every signal has a name and a number which can be used
+interchangeably.  For example, the \Arg{STOP} signal has number
+\Arg{19}, so the following commands are equivalent:
+
+\Prompt{kill -STOP 54399}
+
+\Prompt{kill -19 54399}
+
+We list a few of the most common signals, you can run \Command{kill
+  -l} to see a full list.
+
+\Optiondesc{-TERM, -15} Processes receiving a \Arg{TERM} signal are
+not immediately stopped, but get a chance to shut down gracefully (for
+example by saving intermediate data).  This is the clean way to stop a
+process, and also the signal sent by default if you do not provide a
+\Arg{-sigspec} argument.
+
+\Optiondesc{-KILL, -9} The \Arg{KILL} signal immediately ends the
+process.  If you want to end a process, the recommended way is to try
+the \Arg{TERM} signal first (i.e.\ use \Command{kill} without
+\Arg{-sigspec} argument), and try \Arg{-KILL} if a process does not
+respond to \Arg{TERM}.
+
+\Optiondesc{-STOP, -19} The \Arg{STOP} signal stops (pauses) the
+process.  All calculations are stopped, but the process is not
+destroyed and may be resumed later.
+
+\Optiondesc{-CONT, -18} The \Arg{CONT} signal continues a previously
+stopped process.
+
+\subsubject{\Command{time} --- Measure the time used by a command}
+\Prompt{time COMMAND}\index[TIME]{\Command{time} --- measure running
+  time and CPU use}If you precede a command (or pipeline) by
+\quote{\Command{time}}, the shell will report the total time taken by
+that command.  \Command{time} reports three values:
+
+\Descr{real} \quotation{real} time is the actual time that has passed
+in the physical world (sometimes referred to as \quotation{walltime}
+--- the time that has gone by as measured by a clock on the wall).
+
+\Descr{user} This is the time spent by processor cores (\quotation{CPU
+  time}) executing the code of the command itself.  If the command
+uses multiple processor cores, this value can be larger than the real
+time.  Conversely, user time can be much less than real time if the
+command doesn't do a lot of work (for an example, try \Command{time
+  sleep 5}).
+
+\Descr{sys} The CPU time spent by the operating system (kernel) on
+behalf of your command.  Examples of tasks that count towards
+\quotation{system} time are: input/output, thread management and
+allocation of memory.
+
+\chapter{Working with text}
+\subsubject{\Command{wc} --- count lines, words or characters}
+\Prompt{wc [OPTION]... [FILE]...}  \index[WC]{\Command{wc} --- count
+  lines, words or characters}\Command{wc} prints the number of lines,
+words and bytes (or characters) for each file, and -- if more than one
+file is given --- the total counts.  If no file is given, \Command{wc}
+reads from standard input.  You can select what is printed by
+providing one or more of the following options:
+
+\Optiondesc{-l, --lines}{}
+
+\Optiondesc{-w, --words}{}
+
+\Optiondesc{-c, --bytes}{}
+
+\Optiondesc{-m, --chars}{}
+
+\subsubject{\Command{less} --- Scroll through text}
+\index[LESS]{\Command{less} --- scroll through text} \Prompt{less
+  [FILE]} \Command{less} displays the content of a file, or --- if no
+\Arg{FILE} is provided --- standard input.
+
+While \Command{less} is running, you can navigate the text by pressing
+the appropriate keys.  Some useful commands:
+
+\Optiondesc{j} Scroll forward one line (you can also use the down arrow key).
+
+\Optiondesc{k} Scroll backward one line (you can also use the up arrow key).
+
+\Optiondesc{f} Scroll forward one window.
+
+\Optiondesc{b} Scroll backward one window.
+
+\Optiondesc{q} Quit.
+
+\Optiondesc{h} Read help, where you can learn about further commands
+not explained here.  Press {\tt\bold q} once to leave the help screen
+and go back to the text screen.
+
+A very useful feature is the {\em search} function.  To search for a word in
+the text you are viewing:
+\startitemize[n]
+
+\item Press the {\bold\tt /} (\quotation{slash}) key.  A cursor appears at the
+  bottom of the terminal.
+
+\item Type the word you want so search for, and press {\bold\tt enter}.
+  \Command{less} jumps ahead to the next occurrence of that word (if
+  it appears anywhere below your current position in the text).
+
+\item Press {\bold\tt n} to go to the next occurrence, press {\bold\tt
+  Shift + n} to go back to the previous occurrence.
+
+\stopitemize
+\subsubject{\Command{head} --- \index[START]{print the start}Print the
+  first part of files}
+
+\Prompt{head [OPTION]... [FILE]...}
+\index[HEAD]{\Command{head}}\Command{head} prints the first 10 lines
+of each \Arg{FILE} on standard output.  If no \Arg{FILE} arguments are
+provided (or when \Arg{FILE} is \Arg{-}), \Command{head} reads from
+standard input instead.  Using the option \Arg{-n} or \Arg{--lines=}
+with an integer value \Arg{k}, you change the number of printed lines.
+With a negative number \Arg{--lines=-k}, \Command{head} prints all but
+the last \Arg{k} lines.
+
+Example: print the first 5 files with the extension {\tt .txt} in the
+current directory.  \Prompt{ls *.txt \| head -n 5 }
+
+\subsubject{\Command{tail} --- \index[END]{print the end}Print the last
+  part of files}
+
+\Prompt{tail [OPTION]... [FILE]...}
+\index[TAIL]{\Command{tail}}\Command{tail} prints the last 10 lines of
+each \Arg{FILE} on standard output (it is thus a mirror version of
+\Command{head}).  If no \Arg{FILE} arguments are provided (or when
+\Arg{FILE} is \Arg{-}), \Command{tail} reads standard input.  Using
+the option \Arg{-n} or \Arg{--lines=} with an integer value \Arg{k},
+print the last \Arg{k} lines.  If you provide the option
+\Arg{--lines=+k}, \Command{head} prints everything starting from the
+\Arg{k}th line.
+
+\subsubject{\Command{cat} --- Concatenate files and print}
+
+\Prompt{cat [OPTION]... [FILE]...}
+\index[CAT]{\Command{cat}}\Command{cat} concatenates the \Arg{FILE}s
+passed as arguments, and prints the result on standard output.
+\Command{cat} with a single \Arg{FILE} argument is a quick way to
+print the entire content of that file on standard output:
+\Prompt{cat file1}
+
+Often, \Command{cat} is used with an output redirection to combine a
+number of files into a new file:
+
+\Prompt{cat file1 file2 > file_combined.txt}
+
+Without \Arg{FILE} arguments, or with the argument \quote{\Arg{-}},
+\Command{cat} reads from standard input.  This can be used to combine
+the content of existing files with the output of a command.  For
+example, the following pipeline inserts the output of \Command{ls}
+between two existing files {\tt prologue.txt} and {\tt epilogue.txt}:
+
+\Prompt{ls \| cat prologue.txt - epilogue.txt > my_directory.txt}
+
+\Command{cat} provides a number of options to decorate the output in
+various ways, e.g.\ by adding line numbers, for which we refer to the
+\Command{man} page.
+
+\subsubject{\Command{sort}}
+\index{sorting+\Command{sort} command}
+\Prompt{sort [OPTION]... [FILE]...}
+
+The \Command{sort} command sorts and then prints the lines of all
+input files (or standard input).  By default, lines are sorted
+alphabetically, but other options are available.
+
+\Optiondesc{-r, --reverse} Reverse the sorting order.
+
+\Optiondesc{-n, --numeric-sort} Sort according to the numerical value.
+
+\Optiondesc{-f, --ignore-case} Treat lower case characters as upper
+case when comparing.
+
+\Command{sort} can also work with tabular data, i.e.\ text data where
+each line consists of different fields.  With the option \Arg{-k
+  f1,f2} (or \Arg{--key=f1,f2}), for numbers \Arg{f1} and \Arg{f2},
+\Command{sort} uses the contents of fields \Arg{f1} up to \Arg{f2} to
+sort the lines (\Arg{f2} can be omitted, in which case the contents of
+all fields starting from \Arg{f1} up to the end of the line is used).  We
+refer to the official documentation for more complex key
+specifications and options.
+
+By default, fields are separated by space or tab characters.  With the
+option \Arg{-t SEP} (or \Arg{--field-separator=SEP}), \Command{sort}
+uses the character \Arg{SEP} to delimit the fields.
+
+Example: an alternative way to sort the output of \Command{ls} by file
+size, using \Command{sort} on numeric value of the fifth field:
+\Prompt{ls -l \| sort -k 5,5 -n} This produces similar\footnote{Small
+  differences arise from the combination of alphabetical and numerical
+  sorting. To exactly reproduce the output of \Command{ls}'s built-in
+  \Arg{--sort} option, use the following slightly more complex
+  \Command{sort} pipeline: \Command{ls -l \| sort -k 5n,5 -k 9r,9}}
+output to the following command, which uses the built-in \Arg{--sort}
+option of \Command{ls}: \Prompt{ls -l --sort=size --reverse}.
+
+\subsubject{\Command{uniq} --- Detect repeated lines}
+\index[UNIQ]{\Command{uniq} --- detect repeated lines}
+
+\Prompt{uniq [OPTION]... [INPUT [OUTPUT]]}
+
+\Command{uniq} reads lines from the file \quote{\Arg{INPUT}}, and
+prints to the file \quote{\Arg{OUTPUT}}.  If two or more consecutive
+lines are identical, only one repetition is printed.  \Arg{INPUT} or
+\Arg{OUTPUT} are optional arguments, and may be replaced by standard
+input or output instead.  Some extra options are:
+
+\Optiondesc{-c} Print the number of repetitions of each line.
+
+\Optiondesc{-d} Only print duplicated lines.
+
+\Optiondesc{-u} Only print those lines which are not repeated.
+
+\Optiondesc{-i} Ignore case when comparing lines.
+
+Note that \Command{uniq} only detects {\em consecutive} identical
+lines.  Therefore, a classic technique is to first move identical
+lines together using \Command{sort}, and then filter the output with
+\Command{uniq}, as in the following example:
+
+\Prompt{sort somefile.txt \| uniq}
+
+or, if you want to see unique lines of the output of a command:
+
+\Prompt{COMMAND \| sort \| uniq}
+
+\subsubject{\Command{cut} --- Extract parts of text lines}
+\index[CUT]{\Command{cut} --- extract parts of text
+  lines}\Command{cut} is a useful tool to extract parts of structured
+text.
+
+\Prompt{cut OPTION... [FILE]...}
+
+\Command{cut} takes its input from (a list of) files, or standard
+input.  Depending on the chosen \Arg{OPTION}, \Command{cut} extracts
+either fixed ranges of characters, or fields:
+
+\Optiondesc{-c LIST}Print the character ranges specified in \Arg{LIST}.
+
+\Optiondesc{-f LIST}Treat lines of text as table rows with different
+fields, and print the fields from the given \Arg{LIST}.  By default,
+the TAB character marks the end of a field, but you can choose a
+different field separator using the option \Arg{-d}.
+
+\Optiondesc{-d CHAR} In combination with the \Arg{-f} option: set the
+field separator to the right character of choice, if fields are not
+separated by TAB.
+
+The format of the \Arg{LIST} argument for options \Arg{-c} and
+\Arg{-f} is the same: a list of one or more integers \Arg{i} or
+integer ranges \Arg{i-j}, separated by commas.  For example, the
+following command prints characters 1, 3, 4 and 5 of each line of the
+file {\tt input.txt}:
+
+\Prompt{cut -c 1,3-5 input.txt}
+
+The following command prints columns 3 and 5 of a file with columns
+separated by a single space:
+
+\Prompt{cut -d ' ' -f 3,5 columns.txt}
+
+\subsubject{\Command{grep} --- print matching lines}
+
+\Prompt{grep [OPTION]... PATTERN [FILE...]}
+\index[GREP]{\Command{grep}}\Command{grep} searches given input files
+(or standard input if no files are given) for a pattern and prints the
+matching lines.  By default \Arg{PATTERN} is interpreted as a basic
+regular expression, the option \Arg{-E} enables extended regular
+expressions.  Typical uses are
+\startitemize
+\item searching\index{searching+\Command{grep} --- search inside
+  files} for files that contain certain words, or
+\item filtering the output of commands (or long files) to print only
+  lines containing specific information.
+\stopitemize
+
+\Command{grep} provides many options to configure what is matched and
+what gets printed.  Some of the most commonly used options
+are:
+
+\Optiondesc{-E, --extended-regexp} Interpret \Arg{PATTERN} as an
+extended regular expression.
+
+\Optiondesc{-i, --ignore-case} Allow matches with characters that have
+a different (upper/lower) case.
+
+\Optiondesc{-v, --invert-match} Select those lines which {\em do not}
+match the pattern.
+
+\Optiondesc{-r, --recursive} Recursively search all files under each
+subdirectory, if one or more of the \Arg{FILE} arguments is a
+directory.
+
+Example: list files in the current directory which were last modified
+in March or April.
+
+\Prompt{ls -l \| grep -E 'Mar\|Apr'}
+
+It is often a good idea to enclose the regular expression
+\Arg{PATTERN} in single quotes.  Otherwise, the shell might interpret
+special characters (such as parentheses, the asterisk or the pipe
+symbol), instead of passing the literal \Arg{PATTERN} to
+\Command{grep}.
+
+\chapter{Variables}
+\subsubject{\Command{read} --- Read variables from standard input}
+\index[READ]{\Command{read} --- variables from standard input}
+\Prompt{read [NAME ...]}  The built-in shell command \Command{read}
+takes a list of variable \Arg{NAME}s as arguments.  It reads a line of
+text from standard input, splits it into a list of words, and assigns
+each word to the corresponding variable (if the line contains more
+words than there are variable arguments, the entire remaining part of
+the input line is assigned to the last variable name).
+
+\Command{read} can be used to get user input in interactive scripts,
+but it can also be used to process text output.  A common idiom is to
+combine \Command{read} with a \Command{while} loop. For example, the
+following code successively assigns each line of output from
+\Command{ls -la} to the variable {\tt LINE}, and runs further commands
+to process each line.
+
+\startSHELL
+  ls -la | while read LINE
+  do
+      # sequence of commands that work on $LINE
+      ...
+  done
+\stopSHELL%$
+
+\subsubject{\Command{export} --- Create environment variables}
+
+\Prompt{export name[=value]}
+
+\index[EXPORT]{\Command{export} --- Create environment variables}The
+\Command{export} command creates an environment variable with the
+given \Arg{name}.  If \Arg{name} is the name of an existing shell
+variable, its value is preserved.  To create the variable and set its
+value with a single command, include the optional \Arg{=value}.
+
+\subsubject{\Command{set} --- List shell variables}
+\index[SET]{\Command{set} --- list shell variables}If you run
+\Command{set} without any further arguments, it prints a list of all
+variables and functions defined in the current shell.  \Command{set}
+can also change various options that affect the behaviour of the
+shell.  We refer to the Bash manual for these advanced options.
+
+\subsubject{\Command{printenv} --- List environment variables}
+\index[PRINTENV]{\Command{printenv} --- list environment variables} The
+command \Command{printenv} prints all current environment variables
+and their values.
+
+\completeindex
+
+\stoptext
+%%% Local Variables:
+%%% mode: context
+%%% TeX-master: t
+%%% End:
